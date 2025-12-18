@@ -1,36 +1,200 @@
-> [!NOTE]
-> PR Agent is an open-source project originally created by Qodo, the company behind next-generation AI code review. This repository represents the legacy version of the project and is provided as-is for the community to explore, learn from, and build upon. The project now has its first external maintainer, Naor (([@naorpeled](https://github.com/naorpeled))), and is currently in the process of being donated to an open-source foundation.
+# PR-Agent Local Daemon
 
-## 🚀 About
-PR Agent was the first AI assistant for pull requests, built by Qodo, and contributed to the open-source community.  
-It represents the first generation of intelligent code review - the project that started Qodo’s journey toward fully AI-driven development, Code Review.  
-If you enjoy this project, you’ll love the next-level PR Agent - Qodo free tier version, which is faster, smarter, and built for today’s workflows.  
+A local polling-based PR agent that monitors GitHub notifications and Railway deployments, running as a background service on your machine.
 
-🚀 Qodo includes a free user trial, 250 tokens, bonus tokens for active contributors, and 50% more advanced features than this open-source version.
+> **Fork Note**: This is a fork of [Qodo's PR-Agent](https://github.com/qodo-ai/pr-agent) adapted for local daemon operation with polling instead of webhooks.
 
-If you have an open-source project, you can get the Qodo paid version for free for your project, powered by Google Gemini 2.5 Pro – [https://www.qodo.ai/solutions/open-source/](https://www.qodo.ai/solutions/open-source/)
+## Features
 
----
+- **GitHub Notification Polling** - Responds to @mentions on PRs with AI-powered reviews, descriptions, and suggestions
+- **Railway Deployment Monitoring** - Tracks deployment status and can analyze failures
+- **Local Daemon** - Runs as a background service, no webhook infrastructure needed
+- **Multi-Repo Support** - Monitor multiple repositories from a single daemon
+- **Simple CLI** - Easy setup and management
 
-## ✨ Advanced Features in Qodo
+## Quick Start
 
-### 🧭 PR → Ticket Automation  
-Seamlessly links pull requests to your project tracking system for end-to-end visibility.
+```bash
+# Install
+pip install -e .
 
-### ✅ Auto Best Practices  
-Learns your team’s standards and automatically enforces them during code reviews.
+# Initialize a repository
+cd ~/projects/myapp
+pr-agent init
 
-### 🧪 Code Validation  
-Performs advanced static and semantic analysis to catch issues before merge.
+# Configure credentials (or set environment variables)
+pr-agent config set github_token ghp_xxx
+pr-agent config set anthropic_api_key sk-ant-xxx
 
-### 💬 PR Chat Interface  
-Lets you converse with your PR to explain, summarize, or suggest improvements instantly.
+# Start the daemon
+pr-agent start
 
-### 🔍 Impact Evaluation  
-Analyzes the business and technical effect of each change before approval.
+# Check status
+pr-agent status
+```
 
----
+## CLI Commands
 
-## ❤️ Community
-This open-source release remains here as a community contribution from Qodo — the origin of modern AI-powered code collaboration.  
-We’re proud to share it and inspire developers worldwide.
+| Command | Description |
+|---------|-------------|
+| `pr-agent init` | Add current repo to config |
+| `pr-agent start` | Start polling daemon |
+| `pr-agent stop` | Stop daemon |
+| `pr-agent status` | Show daemon status and tracked repos |
+| `pr-agent config` | View/edit configuration |
+| `pr-agent remove` | Remove repo from config |
+
+## Configuration
+
+Configuration is stored at `~/.pr-agent/config.json`:
+
+```json
+{
+  "version": "1.0",
+  "credentials": {
+    "github_token": "ghp_xxx",
+    "anthropic_api_key": "sk-ant-xxx",
+    "railway_token": "railway_xxx"
+  },
+  "settings": {
+    "poll_interval_github": 30,
+    "poll_interval_railway": 60,
+    "model": "claude-sonnet-4-20250514",
+    "log_level": "INFO",
+    "github_username": "my-bot"
+  },
+  "repos": [
+    {
+      "path": "/Users/you/projects/myapp",
+      "github_repo": "owner/myapp",
+      "railway_project_id": "abc123",
+      "auto_review": true,
+      "auto_describe": false
+    }
+  ]
+}
+```
+
+### Environment Variables
+
+Credentials can also be set via environment variables (takes precedence over config file):
+
+- `GITHUB_TOKEN` - GitHub personal access token
+- `ANTHROPIC_API_KEY` - Anthropic API key
+- `RAILWAY_TOKEN` - Railway API token
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    pr-agent CLI                          │
+├─────────────────────────────────────────────────────────┤
+│  init   - Add repo to config                            │
+│  start  - Start polling daemon                          │
+│  stop   - Stop daemon                                   │
+│  status - Show status                                   │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│              ~/.pr-agent/                                │
+│  config.json  - Repos, credentials, settings            │
+│  daemon.pid   - PID file                                │
+│  logs/        - Log files                               │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                 Polling Daemon                           │
+├─────────────────────────────────────────────────────────┤
+│  GitHubPoller   - Poll notifications for @mentions      │
+│  RailwayPoller  - Poll deployment status changes        │
+│  EventDispatcher - Route events to handlers             │
+│  PRAgent        - Generate AI responses                 │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Usage Examples
+
+### Respond to PR Mentions
+
+When someone mentions your bot on a PR:
+
+```
+@my-bot /review
+```
+
+The daemon will:
+1. Detect the notification via polling
+2. Parse the command (`/review`)
+3. Run PR-Agent's review tool
+4. Post the response as a comment
+
+### Available Commands
+
+When mentioned on a PR, the bot responds to:
+
+| Command | Description |
+|---------|-------------|
+| `/review` | Comprehensive code review |
+| `/describe` | Generate PR description |
+| `/improve` | Suggest code improvements |
+| `/ask <question>` | Answer questions about the PR |
+| `/update_changelog` | Update changelog |
+| `/add_docs` | Generate documentation |
+
+### Railway Integration
+
+Link a Railway project to get deployment notifications:
+
+```bash
+pr-agent init --railway-project abc123
+```
+
+The daemon will monitor deployments and can:
+- Alert on failed deployments
+- Analyze crash logs
+- Correlate deployments with recent PRs
+
+## Development
+
+### Project Structure
+
+```
+pr_agent/
+├── cli/                    # CLI commands
+│   ├── config.py          # Config management
+│   └── main.py            # Typer CLI
+├── polling/               # Polling infrastructure
+│   ├── base.py           # Abstract BasePoller
+│   ├── events.py         # Event models
+│   ├── github.py         # GitHub notification poller
+│   ├── railway.py        # Railway deployment poller
+│   └── dispatcher.py     # Event routing
+└── ...                    # Original PR-Agent tools
+```
+
+### Running in Development
+
+```bash
+# Run in foreground with debug output
+pr-agent start --foreground
+
+# Or run directly
+python -m pr_agent.cli.main start -f
+```
+
+## Requirements
+
+- Python 3.12+
+- GitHub personal access token with `notifications` and `repo` scopes
+- Anthropic API key (or OpenAI API key)
+- Railway API token (optional, for deployment monitoring)
+
+## License
+
+Apache 2.0 - See [LICENSE](LICENSE)
+
+## Acknowledgments
+
+Based on [Qodo PR-Agent](https://github.com/qodo-ai/pr-agent), the original AI-powered PR assistant.
