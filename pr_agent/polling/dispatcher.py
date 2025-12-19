@@ -246,10 +246,12 @@ async def create_pr_agent_handler() -> EventHandler:
             if event.command_args:
                 request += " " + " ".join(event.command_args)
 
-            await agent.handle_request(
+            result = agent.handle_request(
                 pr_url=event.pr_url,
                 request=request,
             )
+            if asyncio.iscoroutine(result):
+                await result
         except Exception as e:
             logger.error(f"PR-Agent failed to process {event.command}: {e}")
             raise
