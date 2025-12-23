@@ -1,12 +1,12 @@
 """
-PR-Agent CLI entry point.
+PR-Agent Daemon entry point.
 
 Commands:
-    pr-agent init     - Add current repo to config
-    pr-agent start    - Start polling daemon
-    pr-agent stop     - Stop daemon
-    pr-agent status   - Show daemon status
-    pr-agent config   - View/edit config
+    pr-agent-daemon init     - Add current repo to config
+    pr-agent-daemon start    - Start polling daemon
+    pr-agent-daemon stop     - Stop daemon
+    pr-agent-daemon status   - Show daemon status
+    pr-agent-daemon config   - View/edit config
 """
 
 import os
@@ -19,7 +19,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from pr_agent.cli.config import (
+from pr_agent.daemon.config import (
     Config,
     RepoConfig,
     DEFAULT_CONFIG_FILE,
@@ -33,7 +33,7 @@ from pr_agent.cli.config import (
 )
 
 app = typer.Typer(
-    name="pr-agent",
+    name="pr-agent-daemon",
     help="Local PR-Agent daemon for GitHub and Railway polling.",
     add_completion=False,
 )

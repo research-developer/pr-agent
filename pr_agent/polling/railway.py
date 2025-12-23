@@ -105,11 +105,13 @@ class RailwayPoller(BasePoller):
         - Emit events only for terminal state transitions
         - Filter by service_ids and environments if specified
         """
-        # STUB: Implementation goes in feature/railway-poller branch
-        raise NotImplementedError(
-            "RailwayPoller.poll() not yet implemented. "
-            "See feature/railway-poller branch."
+        # STUB: Return empty list until implemented in feature/railway-poller branch
+        # This allows the daemon to start without crashing
+        logger.debug(
+            f"[{self.name}] poll() not yet implemented - "
+            "see feature/railway-poller branch"
         )
+        return []
 
     async def _fetch_deployments(self) -> list[dict]:
         """

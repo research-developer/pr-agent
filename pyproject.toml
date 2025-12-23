@@ -43,6 +43,7 @@ include = [
 
 [project.scripts]
 pr-agent = "pr_agent.cli:run"
+pr-agent-daemon = "pr_agent.daemon:run"
 
 [tool.ruff]
 line-length = 120

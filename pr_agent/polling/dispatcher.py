@@ -214,7 +214,7 @@ class EventDispatcher:
         }
 
 
-async def create_pr_agent_handler() -> EventHandler:
+def create_pr_agent_handler() -> EventHandler:
     """
     Create a handler that integrates with existing PR-Agent tools.
 

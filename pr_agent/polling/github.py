@@ -122,11 +122,13 @@ class GitHubPoller(BasePoller):
         - Parse commands from comment body
         - Mark notifications as read
         """
-        # STUB: Implementation goes in feature/github-poller branch
-        raise NotImplementedError(
-            "GitHubPoller.poll() not yet implemented. "
-            "See feature/github-poller branch."
+        # STUB: Return empty list until implemented in feature/github-poller branch
+        # This allows the daemon to start without crashing
+        logger.debug(
+            f"[{self.name}] poll() not yet implemented - "
+            "see feature/github-poller branch"
         )
+        return []
 
     async def _fetch_notifications(self) -> Optional[list[dict]]:
         """

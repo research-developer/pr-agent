@@ -20,29 +20,36 @@ pip install -e .
 
 # Initialize a repository
 cd ~/projects/myapp
-pr-agent init
+pr-agent-daemon init
 
 # Configure credentials (or set environment variables)
-pr-agent config set github_token ghp_xxx
-pr-agent config set anthropic_api_key sk-ant-xxx
+pr-agent-daemon config set github_token ghp_xxx
+pr-agent-daemon config set anthropic_api_key sk-ant-xxx
 
 # Start the daemon
-pr-agent start
+pr-agent-daemon start
 
 # Check status
-pr-agent status
+pr-agent-daemon status
 ```
 
 ## CLI Commands
 
+The daemon uses `pr-agent-daemon` command (separate from the original `pr-agent` CLI):
+
 | Command | Description |
 |---------|-------------|
-| `pr-agent init` | Add current repo to config |
-| `pr-agent start` | Start polling daemon |
-| `pr-agent stop` | Stop daemon |
-| `pr-agent status` | Show daemon status and tracked repos |
-| `pr-agent config` | View/edit configuration |
-| `pr-agent remove` | Remove repo from config |
+| `pr-agent-daemon init` | Add current repo to config |
+| `pr-agent-daemon start` | Start polling daemon |
+| `pr-agent-daemon stop` | Stop daemon |
+| `pr-agent-daemon status` | Show daemon status and tracked repos |
+| `pr-agent-daemon config` | View/edit configuration |
+| `pr-agent-daemon remove` | Remove repo from config |
+
+The original `pr-agent` command remains available for direct PR reviews:
+```bash
+pr-agent --pr_url=<URL> review
+```
 
 ## Configuration
 
@@ -87,7 +94,7 @@ Credentials can also be set via environment variables (takes precedence over con
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    pr-agent CLI                          │
+│                 pr-agent-daemon CLI                      │
 ├─────────────────────────────────────────────────────────┤
 │  init   - Add repo to config                            │
 │  start  - Start polling daemon                          │
@@ -148,7 +155,7 @@ When mentioned on a PR, the bot responds to:
 Link a Railway project to get deployment notifications:
 
 ```bash
-pr-agent init --railway-project abc123
+pr-agent-daemon init --railway-project abc123
 ```
 
 The daemon will monitor deployments and can:
@@ -162,26 +169,27 @@ The daemon will monitor deployments and can:
 
 ```
 pr_agent/
-├── cli/                    # CLI commands
-│   ├── config.py          # Config management
-│   └── main.py            # Typer CLI
-├── polling/               # Polling infrastructure
-│   ├── base.py           # Abstract BasePoller
-│   ├── events.py         # Event models
-│   ├── github.py         # GitHub notification poller
-│   ├── railway.py        # Railway deployment poller
-│   └── dispatcher.py     # Event routing
-└── ...                    # Original PR-Agent tools
+├── daemon/                # Daemon CLI commands
+│   ├── config.py         # Config management
+│   └── main.py           # Typer CLI
+├── polling/              # Polling infrastructure
+│   ├── base.py          # Abstract BasePoller
+│   ├── events.py        # Event models
+│   ├── github.py        # GitHub notification poller
+│   ├── railway.py       # Railway deployment poller
+│   └── dispatcher.py    # Event routing
+├── cli.py               # Original PR-Agent CLI
+└── ...                   # Original PR-Agent tools
 ```
 
 ### Running in Development
 
 ```bash
 # Run in foreground with debug output
-pr-agent start --foreground
+pr-agent-daemon start --foreground
 
 # Or run directly
-python -m pr_agent.cli.main start -f
+python -m pr_agent.daemon.main start -f
 ```
 
 ## Requirements
