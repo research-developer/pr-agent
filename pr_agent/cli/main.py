@@ -257,8 +257,9 @@ def _run_daemon(config: Config):
         dispatcher.add_poller(github_poller)
 
         # Register handlers
-        handler = await create_pr_agent_handler()
+        handler = create_pr_agent_handler()
         dispatcher.register_handler(EventType.GITHUB_PR_MENTION, handler)
+        dispatcher.register_handler(EventType.GITHUB_PR_OPENED, handler)
 
         # Setup Railway pollers for repos that have it configured
         railway_token = get_credential("railway_token", config)
