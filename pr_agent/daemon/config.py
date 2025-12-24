@@ -25,6 +25,8 @@ class Credentials(BaseModel):
     anthropic_api_key: Optional[str] = Field(None, description="Anthropic API key")
     openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
     railway_token: Optional[str] = Field(None, description="Railway API token")
+    cloudflare_token: Optional[str] = Field(None, description="Cloudflare API token")
+    cloudflare_account_id: Optional[str] = Field(None, description="Cloudflare account ID")
 
 
 class Settings(BaseModel):
@@ -32,6 +34,7 @@ class Settings(BaseModel):
 
     poll_interval_github: int = Field(30, description="GitHub poll interval in seconds")
     poll_interval_railway: int = Field(60, description="Railway poll interval in seconds")
+    poll_interval_cloudflare: int = Field(60, description="Cloudflare poll interval in seconds")
     model: str = Field("claude-sonnet-4-20250514", description="Default AI model")
     log_level: str = Field("INFO", description="Logging level")
     github_username: Optional[str] = Field(None, description="GitHub bot username")
@@ -47,6 +50,14 @@ class RepoConfig(BaseModel):
     railway_project_id: Optional[str] = Field(None, description="Railway project ID")
     railway_service_ids: list[str] = Field(
         default_factory=list, description="Railway service IDs to monitor"
+    )
+
+    # Cloudflare integration (optional)
+    cloudflare_pages_project: Optional[str] = Field(
+        None, description="Cloudflare Pages project name"
+    )
+    cloudflare_workers: list[str] = Field(
+        default_factory=list, description="Cloudflare Workers script names to monitor"
     )
 
     # Auto-commands on PR open

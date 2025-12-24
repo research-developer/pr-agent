@@ -27,6 +27,13 @@ class EventType(str, Enum):
     RAILWAY_DEPLOY_BUILDING = "railway.deploy.building"
     RAILWAY_SERVICE_CRASHED = "railway.service.crashed"
 
+    # Cloudflare events
+    CLOUDFLARE_PAGES_SUCCESS = "cloudflare.pages.success"
+    CLOUDFLARE_PAGES_FAILED = "cloudflare.pages.failed"
+    CLOUDFLARE_PAGES_BUILDING = "cloudflare.pages.building"
+    CLOUDFLARE_WORKERS_DEPLOYED = "cloudflare.workers.deployed"
+    CLOUDFLARE_WORKERS_FAILED = "cloudflare.workers.failed"
+
 
 class Event(BaseModel):
     """
@@ -160,3 +167,84 @@ class GitHubPROpenedEvent(Event):
         default_factory=list,
         description="Commands to run automatically (e.g., ['/review', '/describe'])",
     )
+
+
+class CloudflarePagesEvent(Event):
+    """
+    Event for Cloudflare Pages deployment status changes.
+
+    Triggered when a Pages deployment succeeds, fails, or starts building.
+    """
+
+    source: str = "cloudflare"
+
+    # Project info
+    project_name: str = Field(..., description="Cloudflare Pages project name")
+    account_id: str = Field(..., description="Cloudflare account ID")
+
+    # Deployment info
+    deployment_id: str = Field(..., description="Deployment ID")
+    status: str = Field(
+        ..., description="Deployment status (active, success, failed, building)"
+    )
+    url: Optional[str] = Field(None, description="Deployment URL")
+    preview_url: Optional[str] = Field(None, description="Preview URL for branch deploys")
+
+    # Environment
+    environment: str = Field(
+        "production", description="Environment (production, preview)"
+    )
+    branch: Optional[str] = Field(None, description="Git branch name")
+
+    # Git info
+    commit_sha: Optional[str] = Field(None, description="Git commit SHA")
+    commit_message: Optional[str] = Field(None, description="Git commit message")
+
+    # Build info
+    build_duration_ms: Optional[int] = Field(None, description="Build duration in ms")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
+
+    @property
+    def is_failure(self) -> bool:
+        """Check if this is a failure event."""
+        return self.status == "failed"
+
+    @property
+    def is_success(self) -> bool:
+        """Check if this is a success event."""
+        return self.status in ("active", "success")
+
+
+class CloudflareWorkersEvent(Event):
+    """
+    Event for Cloudflare Workers deployment status changes.
+
+    Triggered when a Worker is deployed or fails to deploy.
+    """
+
+    source: str = "cloudflare"
+
+    # Worker info
+    worker_name: str = Field(..., description="Worker script name")
+    account_id: str = Field(..., description="Cloudflare account ID")
+
+    # Deployment info
+    deployment_id: Optional[str] = Field(None, description="Deployment ID")
+    status: str = Field(..., description="Deployment status (deployed, failed)")
+
+    # Version info
+    version_id: Optional[str] = Field(None, description="Worker version ID")
+    routes: list[str] = Field(default_factory=list, description="Worker routes")
+
+    # Error info
+    error_message: Optional[str] = Field(None, description="Error message if failed")
+
+    @property
+    def is_failure(self) -> bool:
+        """Check if this is a failure event."""
+        return self.status == "failed"
+
+    @property
+    def is_success(self) -> bool:
+        """Check if this is a success event."""
+        return self.status == "deployed"
